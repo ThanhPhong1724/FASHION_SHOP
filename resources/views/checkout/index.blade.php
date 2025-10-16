@@ -278,10 +278,41 @@
                     @endforeach
                 </div>
 
+                <!-- Coupon Section -->
+                <div class="mt-6 border-t border-gray-200 pt-6">
+                    <h3 class="text-sm font-medium text-gray-900 mb-3">Mã giảm giá</h3>
+                    <div class="flex space-x-2">
+                        <input type="text" id="coupon_code" placeholder="Nhập mã giảm giá"
+                               class="flex-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <button type="button" id="apply-coupon-btn"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Áp dụng
+                        </button>
+                    </div>
+                    <div id="coupon-message" class="mt-2 text-sm hidden"></div>
+                    <div id="applied-coupon" class="mt-3 hidden">
+                        <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded-md p-3">
+                            <div>
+                                <div class="text-sm font-medium text-green-800" id="coupon-name"></div>
+                                <div class="text-xs text-green-600" id="coupon-description"></div>
+                            </div>
+                            <button type="button" id="remove-coupon-btn" class="text-green-600 hover:text-green-800">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <dl class="mt-6 space-y-4">
                     <div class="flex items-center justify-between">
                         <dt class="text-sm text-gray-600">Tạm tính</dt>
-                        <dd class="text-sm font-medium text-gray-900">{{ number_format($cart->total, 0, ',', '.') }}đ</dd>
+                        <dd class="text-sm font-medium text-gray-900" id="subtotal">{{ number_format($cart->total, 0, ',', '.') }}đ</dd>
+                    </div>
+                    <div id="discount-row" class="flex items-center justify-between hidden">
+                        <dt class="text-sm text-gray-600">Giảm giá</dt>
+                        <dd class="text-sm font-medium text-green-600" id="discount-amount">-0đ</dd>
                     </div>
                     <div class="flex items-center justify-between">
                         <dt class="text-sm text-gray-600">Phí vận chuyển</dt>
@@ -289,7 +320,7 @@
                     </div>
                     <div class="flex items-center justify-between border-t border-gray-200 pt-4">
                         <dt class="text-base font-medium text-gray-900">Tổng cộng</dt>
-                        <dd class="text-base font-medium text-gray-900">{{ number_format($cart->total, 0, ',', '.') }}đ</dd>
+                        <dd class="text-base font-medium text-gray-900" id="total">{{ number_format($cart->total, 0, ',', '.') }}đ</dd>
                     </div>
                 </dl>
 
@@ -353,6 +384,104 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial check
     checkSavedAddress();
     
+    // Coupon functionality
+    let appliedCoupon = null;
+    
+    // Apply coupon
+    document.getElementById('apply-coupon-btn').addEventListener('click', function() {
+        const couponCode = document.getElementById('coupon_code').value.trim();
+        const messageDiv = document.getElementById('coupon-message');
+        
+        if (!couponCode) {
+            showCouponMessage('Vui lòng nhập mã giảm giá', 'error');
+            return;
+        }
+        
+        fetch('/checkout/apply-coupon', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ coupon_code: couponCode })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                appliedCoupon = data.coupon;
+                showAppliedCoupon(data.coupon);
+                updateTotals(data.subtotal, data.discount, data.total);
+                showCouponMessage('Áp mã giảm giá thành công!', 'success');
+                document.getElementById('coupon_code').value = '';
+            } else {
+                showCouponMessage(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showCouponMessage('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+        });
+    });
+    
+    // Remove coupon
+    document.getElementById('remove-coupon-btn').addEventListener('click', function() {
+        fetch('/checkout/remove-coupon', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                appliedCoupon = null;
+                hideAppliedCoupon();
+                updateTotals(data.subtotal, 0, data.total);
+                showCouponMessage('Đã xóa mã giảm giá', 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+    
+    function showCouponMessage(message, type) {
+        const messageDiv = document.getElementById('coupon-message');
+        messageDiv.textContent = message;
+        messageDiv.className = `mt-2 text-sm ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
+        messageDiv.classList.remove('hidden');
+        
+        setTimeout(() => {
+            messageDiv.classList.add('hidden');
+        }, 3000);
+    }
+    
+    function showAppliedCoupon(coupon) {
+        document.getElementById('coupon-name').textContent = coupon.name;
+        document.getElementById('coupon-description').textContent = coupon.description || '';
+        document.getElementById('applied-coupon').classList.remove('hidden');
+    }
+    
+    function hideAppliedCoupon() {
+        document.getElementById('applied-coupon').classList.add('hidden');
+    }
+    
+    function updateTotals(subtotal, discount, total) {
+        document.getElementById('subtotal').textContent = formatCurrency(subtotal);
+        document.getElementById('total').textContent = formatCurrency(total);
+        
+        if (discount > 0) {
+            document.getElementById('discount-amount').textContent = '-' + formatCurrency(discount);
+            document.getElementById('discount-row').classList.remove('hidden');
+        } else {
+            document.getElementById('discount-row').classList.add('hidden');
+        }
+    }
+    
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+    }
+
     // OTP functionality for guest checkout
     let otpVerified = false;
     let otpCode = null;
@@ -440,6 +569,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const notes = document.querySelector('textarea[name="notes"]').value;
         if (notes) {
             formData.append('notes', notes);
+        }
+        
+        // Add coupon data
+        if (appliedCoupon) {
+            formData.append('coupon_id', appliedCoupon.id);
         }
         
         // Add guest information

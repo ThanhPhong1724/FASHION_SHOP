@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Address;
 use App\Models\Cart;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductVariant;
@@ -177,6 +178,99 @@ class CheckoutController extends Controller
     }
 
     /**
+     * Apply coupon to checkout
+     */
+    public function applyCoupon(Request $request): JsonResponse
+    {
+        $request->validate([
+            'coupon_code' => 'required|string|max:50'
+        ]);
+
+        $cart = $this->getOrCreateCart();
+        
+        if ($cart->items->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Giỏ hàng trống!'
+            ], 400);
+        }
+
+        $coupon = Coupon::where('code', $request->coupon_code)
+            ->active()
+            ->notExpired()
+            ->first();
+
+        if (!$coupon) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mã giảm giá không hợp lệ hoặc đã hết hạn!'
+            ], 400);
+        }
+
+        // Check if user has already used this coupon
+        if (Auth::check() && $coupon->users()->where('user_id', Auth::id())->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn đã sử dụng mã giảm giá này rồi!'
+            ], 400);
+        }
+
+        // Check minimum order amount
+        if ($cart->total < $coupon->min_order_amount) {
+            return response()->json([
+                'success' => false,
+                'message' => "Đơn hàng tối thiểu phải từ " . number_format($coupon->min_order_amount, 0, ',', '.') . "đ để sử dụng mã này!"
+            ], 400);
+        }
+
+        // Check usage limit
+        if ($coupon->isUsageLimitReached()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mã giảm giá đã hết lượt sử dụng!'
+            ], 400);
+        }
+
+        // Calculate discount
+        $discount = $coupon->calculateDiscount($cart->total);
+        $total = $cart->total - $discount;
+
+        // Store coupon in session
+        session(['applied_coupon' => $coupon->id]);
+
+        return response()->json([
+            'success' => true,
+            'coupon' => [
+                'id' => $coupon->id,
+                'name' => $coupon->name,
+                'description' => $coupon->description,
+                'code' => $coupon->code
+            ],
+            'subtotal' => $cart->total,
+            'discount' => $discount,
+            'total' => $total
+        ]);
+    }
+
+    /**
+     * Remove applied coupon
+     */
+    public function removeCoupon(): JsonResponse
+    {
+        $cart = $this->getOrCreateCart();
+        
+        // Remove coupon from session
+        session()->forget('applied_coupon');
+
+        return response()->json([
+            'success' => true,
+            'subtotal' => $cart->total,
+            'discount' => 0,
+            'total' => $cart->total
+        ]);
+    }
+
+    /**
      * Show checkout success page
      */
     public function success(Order $order): View
@@ -186,7 +280,7 @@ class CheckoutController extends Controller
             abort(403);
         }
 
-        $order->load(['items.variant.product', 'shippingAddress']);
+        $order->load(['items.variant.product', 'shippingAddress', 'coupons']);
 
         return view('checkout.success', compact('order'));
     }
@@ -261,15 +355,28 @@ class CheckoutController extends Controller
     {
         $orderNumber = $this->generateOrderNumber();
         
+        // Calculate discount from applied coupon
+        $discount = 0;
+        $appliedCoupon = null;
+        
+        if (session('applied_coupon')) {
+            $appliedCoupon = Coupon::find(session('applied_coupon'));
+            if ($appliedCoupon) {
+                $discount = $appliedCoupon->calculateDiscount($cart->total);
+            }
+        }
+        
+        $total = $cart->total - $discount;
+        
         $orderData = [
             'user_id' => Auth::check() ? Auth::id() : null,
             'order_number' => $orderNumber,
             'status' => 'pending',
             'subtotal' => $cart->total,
-            'discount' => 0, // TODO: Implement coupon system
+            'discount' => $discount,
             'shipping_fee' => 0, // Free shipping for now
             'tax' => 0,
-            'total' => $cart->total,
+            'total' => $total,
             'payment_method' => $request->payment_method,
             'payment_status' => 'pending',
             'shipping_address_id' => $shippingAddress->id,
@@ -282,7 +389,23 @@ class CheckoutController extends Controller
             $orderData['guest_phone'] = $request->guest_phone;
         }
 
-        return Order::create($orderData);
+        $order = Order::create($orderData);
+        
+        // Attach coupon to order if applied
+        if ($appliedCoupon) {
+            $order->coupons()->attach($appliedCoupon->id, [
+                'user_id' => Auth::id(),
+                'used_at' => now()
+            ]);
+            
+            // Increment coupon usage count
+            $appliedCoupon->increment('used_count');
+            
+            // Clear coupon from session
+            session()->forget('applied_coupon');
+        }
+
+        return $order;
     }
 
     /**

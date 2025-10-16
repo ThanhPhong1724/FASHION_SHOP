@@ -56,8 +56,40 @@
                     <dt class="text-sm font-medium text-gray-500">Tổng tiền</dt>
                     <dd class="mt-1 text-sm text-gray-900 font-semibold">{{ number_format($order->total, 0, ',', '.') }}đ</dd>
                 </div>
+                @if($order->discount > 0)
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Giảm giá</dt>
+                    <dd class="mt-1 text-sm text-green-600 font-semibold">-{{ number_format($order->discount, 0, ',', '.') }}đ</dd>
+                </div>
+                @endif
             </div>
         </div>
+
+        <!-- Applied Coupon -->
+        @if($order->coupons->count() > 0)
+        <div class="bg-green-50 rounded-lg p-6 mb-8">
+            <h2 class="text-lg font-medium text-green-900 mb-4">Mã giảm giá đã áp dụng</h2>
+            
+            @foreach($order->coupons as $coupon)
+                <div class="flex items-center justify-between bg-white border border-green-200 rounded-md p-3">
+                    <div>
+                        <div class="text-sm font-medium text-green-800">{{ $coupon->name }}</div>
+                        <div class="text-xs text-green-600">Mã: {{ $coupon->code }}</div>
+                        @if($coupon->description)
+                            <div class="text-xs text-green-600 mt-1">{{ $coupon->description }}</div>
+                        @endif
+                    </div>
+                    <div class="text-sm font-medium text-green-800">
+                        @if($coupon->type === 'percentage')
+                            -{{ $coupon->value }}%
+                        @else
+                            -{{ number_format($coupon->value, 0, ',', '.') }}đ
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        </div>
+        @endif
 
         <!-- Shipping Address -->
         <div class="bg-gray-50 rounded-lg p-6 mb-8">
