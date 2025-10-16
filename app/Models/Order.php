@@ -25,6 +25,8 @@ class Order extends Model
         'shipping_address_id',
         'billing_address_id',
         'notes',
+        'guest_email',
+        'guest_phone',
         'shipped_at',
         'delivered_at',
     ];
@@ -63,6 +65,7 @@ class Order extends Model
     {
         return match($this->status) {
             'pending' => 'Chờ xác nhận',
+            'pending_payment' => 'Chờ thanh toán',
             'confirmed' => 'Đã xác nhận',
             'processing' => 'Đang xử lý',
             'shipping' => 'Đang giao',
@@ -89,7 +92,7 @@ class Order extends Model
         return match($this->payment_method) {
             'cod' => 'Thanh toán khi nhận hàng',
             'bank_transfer' => 'Chuyển khoản ngân hàng',
-            'credit_card' => 'Thẻ tín dụng',
+            'vnpay' => 'VNPay',
             'momo' => 'Ví MoMo',
             'zalopay' => 'Ví ZaloPay',
             default => 'Không xác định'

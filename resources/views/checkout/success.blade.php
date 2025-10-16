@@ -37,6 +37,21 @@
                     <dt class="text-sm font-medium text-gray-500">Phương thức thanh toán</dt>
                     <dd class="mt-1 text-sm text-gray-900">{{ $order->payment_method_label }}</dd>
                 </div>
+                @if($order->guest_email)
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Email</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ $order->guest_email }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Số điện thoại</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ $order->guest_phone }}</dd>
+                </div>
+                @elseif($order->user)
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Khách hàng</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ $order->user->name }} ({{ $order->user->email }})</dd>
+                </div>
+                @endif
                 <div>
                     <dt class="text-sm font-medium text-gray-500">Tổng tiền</dt>
                     <dd class="mt-1 text-sm text-gray-900 font-semibold">{{ number_format($order->total, 0, ',', '.') }}đ</dd>

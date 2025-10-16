@@ -42,6 +42,46 @@
             
             <!-- Checkout Form -->
             <div class="lg:col-span-7">
+                <!-- Guest Information -->
+                @guest
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">Thông tin liên lạc</h2>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="guest_email" class="block text-sm font-medium text-gray-700">Email *</label>
+                            <input type="email" id="guest_email" name="guest_email" required
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                   placeholder="your@email.com">
+                        </div>
+                        <div>
+                            <label for="guest_phone" class="block text-sm font-medium text-gray-700">Số điện thoại *</label>
+                            <div class="mt-1 flex rounded-md shadow-sm">
+                                <input type="tel" id="guest_phone" name="guest_phone" required
+                                       class="flex-1 block w-full border-gray-300 rounded-l-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                       placeholder="0123456789">
+                                <button type="button" id="send-otp-btn" 
+                                        class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 text-gray-500 text-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    Gửi OTP
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="otp-section" class="mt-4 hidden">
+                        <label for="otp_code" class="block text-sm font-medium text-gray-700">Mã OTP *</label>
+                        <div class="mt-1 flex rounded-md shadow-sm">
+                            <input type="text" id="otp_code" name="otp_code" maxlength="6"
+                                   class="flex-1 block w-full border-gray-300 rounded-l-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                   placeholder="Nhập mã OTP">
+                            <button type="button" id="verify-otp-btn" 
+                                    class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-indigo-600 text-white text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                Xác thực
+                            </button>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-500">Mã OTP đã được gửi đến số điện thoại của bạn</p>
+                    </div>
+                </div>
+                @endguest
+
                 <!-- Shipping Address -->
                 <div class="bg-gray-50 rounded-lg p-6 mb-8">
                     <h2 class="text-lg font-medium text-gray-900 mb-4">Địa chỉ giao hàng</h2>
@@ -121,11 +161,58 @@
                     <h2 class="text-lg font-medium text-gray-900 mb-4">Phương thức thanh toán</h2>
                     
                     <div class="space-y-3">
+                        @guest
+                        <!-- Guest checkout - only prepaid methods -->
+                        <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="payment_method" value="vnpay" checked class="mr-3">
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-900">VNPay</div>
+                                <div class="text-sm text-gray-600">Thanh toán qua VNPay (Thẻ ATM, Visa, MasterCard)</div>
+                            </div>
+                        </label>
+                        
+                        <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="payment_method" value="momo" class="mr-3">
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-900">Ví MoMo</div>
+                                <div class="text-sm text-gray-600">Thanh toán qua ví MoMo</div>
+                            </div>
+                        </label>
+                        
+                        <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-blue-700">
+                                        Đặt hàng không cần đăng ký chỉ hỗ trợ thanh toán trả trước để tránh đơn hàng ảo.
+                                    </p>
+                                    <div class="mt-2 text-xs text-blue-600">
+                                        <strong>Thông tin thẻ test VNPay:</strong><br>
+                                        Ngân hàng: NCB | Số thẻ: 9704198526191432198<br>
+                                        Tên: NGUYEN VAN A | Ngày: 07/15 | OTP: 123456
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @else
+                        <!-- Authenticated users - all methods -->
                         <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
                             <input type="radio" name="payment_method" value="cod" checked class="mr-3">
                             <div class="flex-1">
                                 <div class="font-medium text-gray-900">Thanh toán khi nhận hàng (COD)</div>
                                 <div class="text-sm text-gray-600">Thanh toán bằng tiền mặt khi nhận hàng</div>
+                            </div>
+                        </label>
+                        
+                        <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="payment_method" value="vnpay" class="mr-3">
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-900">VNPay</div>
+                                <div class="text-sm text-gray-600">Thanh toán qua VNPay (Thẻ ATM, Visa, MasterCard)</div>
                             </div>
                         </label>
                         
@@ -144,6 +231,7 @@
                                 <div class="text-sm text-gray-600">Thanh toán qua ví MoMo</div>
                             </div>
                         </label>
+                        @endauth
                     </div>
                 </div>
 
@@ -265,9 +353,75 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial check
     checkSavedAddress();
     
+    // OTP functionality for guest checkout
+    let otpVerified = false;
+    let otpCode = null;
+    const isGuest = document.getElementById('guest_email') !== null;
+    
+    if (isGuest) {
+        // Send OTP
+        document.getElementById('send-otp-btn').addEventListener('click', function() {
+            const phone = document.getElementById('guest_phone').value;
+            const email = document.getElementById('guest_email').value;
+            
+            if (!phone || !email) {
+                showNotification('Vui lòng nhập đầy đủ email và số điện thoại', 'error');
+                return;
+            }
+            
+            // Mock OTP generation
+            otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            // Show OTP section
+            document.getElementById('otp-section').classList.remove('hidden');
+            
+            // Disable send button temporarily
+            this.disabled = true;
+            this.textContent = 'Đã gửi';
+            
+            // Show notification
+            showNotification(`Mã OTP: ${otpCode} (Mock - trong thực tế sẽ gửi SMS)`, 'success');
+            
+            // Re-enable after 30 seconds
+            setTimeout(() => {
+                this.disabled = false;
+                this.textContent = 'Gửi lại OTP';
+            }, 30000);
+        });
+        
+        // Verify OTP
+        document.getElementById('verify-otp-btn').addEventListener('click', function() {
+            const inputOtp = document.getElementById('otp_code').value;
+            
+            if (!inputOtp) {
+                showNotification('Vui lòng nhập mã OTP', 'error');
+                return;
+            }
+            
+            if (inputOtp === otpCode) {
+                otpVerified = true;
+                document.getElementById('otp_code').disabled = true;
+                this.disabled = true;
+                this.textContent = 'Đã xác thực';
+                this.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                this.classList.add('bg-green-600');
+                
+                showNotification('Xác thực OTP thành công!', 'success');
+            } else {
+                showNotification('Mã OTP không đúng', 'error');
+            }
+        });
+    }
+    
     // Handle form submission
     form.addEventListener('submit', function(e) {
         e.preventDefault();
+        
+        // Check OTP verification for guest
+        if (isGuest && !otpVerified) {
+            showNotification('Vui lòng xác thực OTP trước khi đặt hàng', 'error');
+            return;
+        }
         
         const originalText = placeOrderBtn.textContent;
         placeOrderBtn.disabled = true;
@@ -286,6 +440,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const notes = document.querySelector('textarea[name="notes"]').value;
         if (notes) {
             formData.append('notes', notes);
+        }
+        
+        // Add guest information
+        if (isGuest) {
+            formData.append('guest_email', document.getElementById('guest_email').value);
+            formData.append('guest_phone', document.getElementById('guest_phone').value);
         }
         
         // Add address data
