@@ -124,7 +124,7 @@ class Product extends Model implements HasMedia
      */
     public function getFinalPriceAttribute(): float
     {
-        return $this->sale_price ?? $this->base_price;
+        return (float) ($this->sale_price ?? $this->base_price);
     }
 
     /**

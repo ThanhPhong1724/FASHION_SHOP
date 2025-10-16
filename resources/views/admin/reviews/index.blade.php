@@ -169,10 +169,12 @@
                                             @if($review->status === 'pending')
                                                 <form method="POST" action="{{ route('admin.reviews.approve', $review) }}" class="inline">
                                                     @csrf
+                                                    @method('PATCH')
                                                     <button type="submit" class="text-green-600 hover:text-green-900">Duyệt</button>
                                                 </form>
                                                 <form method="POST" action="{{ route('admin.reviews.reject', $review) }}" class="inline">
                                                     @csrf
+                                                    @method('PATCH')
                                                     <button type="submit" class="text-red-600 hover:text-red-900">Từ chối</button>
                                                 </form>
                                             @endif

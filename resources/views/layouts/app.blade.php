@@ -13,6 +13,22 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- Custom CSS for line-clamp -->
+    <style>
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
 </head>
 <body class="font-sans antialiased bg-gray-50">
     <div class="min-h-screen">
@@ -42,7 +58,7 @@
                     <!-- Search Bar -->
                     <div class="flex-1 flex items-center justify-center px-2 lg:ml-6 lg:justify-end">
                         <div class="max-w-lg w-full lg:max-w-xs">
-                            <form action="{{ route('products.index') }}" method="GET">
+                            <form action="{{ route('search.index') }}" method="GET">
                                 <label for="search" class="sr-only">Tìm kiếm</label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -50,7 +66,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                         </svg>
                                     </div>
-                                    <input id="search" name="search" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Tìm kiếm sản phẩm..." type="search" value="{{ request('search') }}">
+                                    <input id="search" name="q" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Tìm kiếm sản phẩm..." type="search" value="{{ request('q') }}">
                                 </div>
                             </form>
                         </div>

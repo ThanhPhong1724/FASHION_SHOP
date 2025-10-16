@@ -3,7 +3,7 @@
 @section('title', 'Danh sách yêu thích')
 
 @section('content')
-<div class="mx-auto px-4 sm:px-6 lg:px-8 py-8" style="min-width: 1600px;">
+<div style="max-width: 1280px;" class="mx-auto px-4 sm:px-6 lg:px-8 py-8"">
     <!-- Header -->
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900">Danh sách yêu thích</h1>
@@ -34,8 +34,8 @@
                         
                         <!-- Remove from wishlist button -->
                         <button type="button" 
-                                onclick="removeFromWishlist({{ $product->id }})"
-                                class="absolute top-2 right-2 bg-white bg-opacity-80 hover:bg-opacity-100 text-red-500 rounded-full p-2 transition-all duration-200 opacity-0 group-hover:opacity-100">
+                                data-product-id="{{ $product->id }}"
+                                class="remove-wishlist-btn absolute top-2 right-2 bg-white bg-opacity-80 hover:bg-opacity-100 text-red-500 rounded-full p-2 transition-all duration-200 opacity-0 group-hover:opacity-100">
                             <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                             </svg>
@@ -72,8 +72,8 @@
                                 Xem chi tiết
                             </a>
                             <button type="button" 
-                                    onclick="addToCartFromWishlist({{ $product->id }})"
-                                    class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors">
+                                    data-product-id="{{ $product->id }}"
+                                    class="add-to-cart-btn bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"></path>
                                 </svg>
@@ -117,6 +117,25 @@
 </form>
 
 <script>
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Remove from wishlist buttons
+    document.querySelectorAll('.remove-wishlist-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            removeFromWishlist(productId);
+        });
+    });
+    
+    // Add to cart buttons
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            addToCartFromWishlist(productId);
+        });
+    });
+});
+
 // Remove from wishlist function
 function removeFromWishlist(productId) {
     if (confirm('Bạn có chắc muốn xóa sản phẩm này khỏi danh sách yêu thích?')) {

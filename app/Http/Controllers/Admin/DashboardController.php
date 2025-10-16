@@ -45,9 +45,9 @@ class DashboardController extends Controller
             ->get()
             ->pluck('count', 'status');
         
-        // Revenue by month (last 6 months) - SQLite compatible
+        // Revenue by month (last 6 months) - MySQL compatible
         $monthlyRevenue = Order::select(
-                DB::raw('strftime("%Y-%m", created_at) as month'),
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
                 DB::raw('SUM(total) as revenue')
             )
             ->where('status', '!=', 'cancelled')

@@ -18,21 +18,37 @@ class ProductController extends Controller
     {
         $query = Product::with(['category', 'brand', 'tags'])
             ->active()
-            ->withCount('variants');
+            ->withCount(['variants', 'approvedReviews']);
 
-        // Search
+        // Advanced Search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('short_description', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%")
+                  ->orWhereHas('category', function ($subQ) use ($search) {
+                      $subQ->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('brand', function ($subQ) use ($search) {
+                      $subQ->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('tags', function ($subQ) use ($search) {
+                      $subQ->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
-        // Category filter
+        // Category filter (including subcategories)
         if ($request->filled('category')) {
-            $query->where('category_id', $request->category);
+            $categoryId = $request->category;
+            $query->where(function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId)
+                  ->orWhereHas('category', function ($subQ) use ($categoryId) {
+                      $subQ->where('parent_id', $categoryId);
+                  });
+            });
         }
 
         // Brand filter
@@ -40,12 +56,46 @@ class ProductController extends Controller
             $query->where('brand_id', $request->brand);
         }
 
-        // Price range filter
-        if ($request->filled('min_price')) {
-            $query->where('base_price', '>=', $request->min_price);
+        // Price range filter (considering sale price)
+        if ($request->filled('min_price') || $request->filled('max_price')) {
+            $query->where(function ($q) use ($request) {
+                $minPrice = $request->min_price;
+                $maxPrice = $request->max_price;
+                
+                if ($minPrice) {
+                    $q->where(function ($subQ) use ($minPrice) {
+                        $subQ->where('base_price', '>=', $minPrice)
+                             ->orWhere(function ($saleQ) use ($minPrice) {
+                                 $saleQ->whereNotNull('sale_price')
+                                       ->where('sale_price', '>=', $minPrice);
+                             });
+                    });
+                }
+                
+                if ($maxPrice) {
+                    $q->where(function ($subQ) use ($maxPrice) {
+                        $subQ->where('base_price', '<=', $maxPrice)
+                             ->orWhere(function ($saleQ) use ($maxPrice) {
+                                 $saleQ->whereNotNull('sale_price')
+                                       ->where('sale_price', '<=', $maxPrice);
+                             });
+                    });
+                }
+            });
         }
-        if ($request->filled('max_price')) {
-            $query->where('base_price', '<=', $request->max_price);
+
+        // Size filter
+        if ($request->filled('size')) {
+            $query->whereHas('variants', function ($q) use ($request) {
+                $q->where('size', $request->size)->where('stock', '>', 0);
+            });
+        }
+
+        // Color filter
+        if ($request->filled('color')) {
+            $query->whereHas('variants', function ($q) use ($request) {
+                $q->where('color', 'like', "%{$request->color}%")->where('stock', '>', 0);
+            });
         }
 
         // Tags filter
@@ -60,14 +110,27 @@ class ProductController extends Controller
             $query->featured();
         }
 
+        // In stock filter
+        if ($request->filled('in_stock')) {
+            $query->whereHas('variants', function ($q) {
+                $q->where('stock', '>', 0);
+            });
+        }
+
+        // On sale filter
+        if ($request->filled('on_sale')) {
+            $query->whereNotNull('sale_price')
+                  ->where('sale_price', '<', \DB::raw('base_price'));
+        }
+
         // Sort
         $sort = $request->get('sort', 'newest');
         switch ($sort) {
             case 'price_asc':
-                $query->orderBy('base_price', 'asc');
+                $query->orderByRaw('COALESCE(sale_price, base_price) ASC');
                 break;
             case 'price_desc':
-                $query->orderBy('base_price', 'desc');
+                $query->orderByRaw('COALESCE(sale_price, base_price) DESC');
                 break;
             case 'name_asc':
                 $query->orderBy('name', 'asc');
@@ -78,6 +141,16 @@ class ProductController extends Controller
             case 'featured':
                 $query->orderBy('is_featured', 'desc')->orderBy('created_at', 'desc');
                 break;
+            case 'popular':
+                $query->orderBy('sales_count', 'desc')->orderBy('views_count', 'desc');
+                break;
+            case 'rating':
+                $query->leftJoin('reviews', 'products.id', '=', 'reviews.product_id')
+                      ->where('reviews.status', 'approved')
+                      ->selectRaw('products.*, AVG(reviews.rating) as avg_rating')
+                      ->groupBy('products.id')
+                      ->orderBy('avg_rating', 'desc');
+                break;
             default: // newest
                 $query->orderBy('created_at', 'desc');
                 break;
@@ -86,9 +159,30 @@ class ProductController extends Controller
         $products = $query->paginate(12)->withQueryString();
 
         // Get filter options
-        $categories = Category::active()->withCount('products')->get();
-        $brands = Brand::active()->withCount('products')->get();
-        $tags = Tag::withCount('products')->get();
+        $categories = Category::active()->with('children')->whereNull('parent_id')->get();
+        $brands = Brand::active()->get();
+        $tags = Tag::all();
+        
+        // Get available sizes and colors
+        $sizes = Product::active()
+            ->join('product_variants', 'products.id', '=', 'product_variants.product_id')
+            ->where('product_variants.stock', '>', 0)
+            ->whereNotNull('product_variants.size')
+            ->distinct()
+            ->pluck('product_variants.size')
+            ->filter()
+            ->sort()
+            ->values();
+
+        $colors = Product::active()
+            ->join('product_variants', 'products.id', '=', 'product_variants.product_id')
+            ->where('product_variants.stock', '>', 0)
+            ->whereNotNull('product_variants.color')
+            ->distinct()
+            ->pluck('product_variants.color')
+            ->filter()
+            ->sort()
+            ->values();
 
         // Price range
         $priceRange = [
@@ -101,6 +195,8 @@ class ProductController extends Controller
             'categories',
             'brands',
             'tags',
+            'sizes',
+            'colors',
             'priceRange'
         ));
     }

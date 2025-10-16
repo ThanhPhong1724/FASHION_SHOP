@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BrandController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 // Homepage
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -19,6 +20,11 @@ Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->
 
 // Brands
 Route::get('/brands/{brand:slug}', [BrandController::class, 'show'])->name('brands.show');
+
+// Search
+Route::get('/search', [App\Http\Controllers\SearchController::class, 'index'])->name('search.index');
+Route::get('/search/suggestions', [App\Http\Controllers\SearchController::class, 'suggestions'])->name('search.suggestions');
+Route::get('/search/popular', [App\Http\Controllers\SearchController::class, 'popular'])->name('search.popular');
 
 // Cart routes (public)
 Route::get('/cart', [App\Http\Controllers\CartController::class, 'index'])->name('cart.index');
@@ -43,7 +49,7 @@ Route::get('/test-cart', function() {
         'cart' => $cart,
         'cart_item' => $cartItem,
         'session_id' => session()->getId(),
-        'user_id' => auth()->id()
+        'user_id' => Auth::check() ? Auth::id() : null
     ]);
 });
 

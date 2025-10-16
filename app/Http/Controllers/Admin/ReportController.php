@@ -233,13 +233,13 @@ class ReportController extends Controller
                     ->get();
                 break;
             case 'weekly':
-                $data = $query->selectRaw('strftime("%Y-%W", created_at) as week, COUNT(*) as orders, SUM(total) as revenue')
+                $data = $query->selectRaw('DATE_FORMAT(created_at, "%Y-%u") as week, COUNT(*) as orders, SUM(total) as revenue')
                     ->groupBy('week')
                     ->orderBy('week')
                     ->get();
                 break;
             case 'monthly':
-                $data = $query->selectRaw('strftime("%Y-%m", created_at) as month, COUNT(*) as orders, SUM(total) as revenue')
+                $data = $query->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as orders, SUM(total) as revenue')
                     ->groupBy('month')
                     ->orderBy('month')
                     ->get();

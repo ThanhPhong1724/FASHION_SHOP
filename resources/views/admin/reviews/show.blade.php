@@ -11,6 +11,7 @@
                         @if($review->status === 'pending')
                             <form method="POST" action="{{ route('admin.reviews.approve', $review) }}" class="inline">
                                 @csrf
+                                @method('PATCH')
                                 <button type="submit" 
                                         class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
                                     Duyệt review
@@ -18,6 +19,7 @@
                             </form>
                             <form method="POST" action="{{ route('admin.reviews.reject', $review) }}" class="inline">
                                 @csrf
+                                @method('PATCH')
                                 <button type="submit" 
                                         class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
                                     Từ chối review

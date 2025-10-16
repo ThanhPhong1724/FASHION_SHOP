@@ -28,12 +28,26 @@
                             <h4 class="font-medium text-gray-900 mb-3">Danh mục</h4>
                             <div class="space-y-2">
                                 @foreach($categories as $category)
-                                    <label class="flex items-center">
-                                        <input type="radio" name="category" value="{{ $category->id }}" 
-                                               {{ request('category') == $category->id ? 'checked' : '' }}
-                                               class="filter-input rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                        <span class="ml-2 text-sm text-gray-700">{{ $category->name }} ({{ $category->products_count }})</span>
-                                    </label>
+                                    <div>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="category" value="{{ $category->id }}" 
+                                                   {{ request('category') == $category->id ? 'checked' : '' }}
+                                                   class="filter-input rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                            <span class="ml-2 text-sm text-gray-700">{{ $category->name }}</span>
+                                        </label>
+                                        @if($category->children->count() > 0)
+                                            <div class="ml-6 mt-1 space-y-1">
+                                                @foreach($category->children as $child)
+                                                    <label class="flex items-center">
+                                                        <input type="radio" name="category" value="{{ $child->id }}" 
+                                                               {{ request('category') == $child->id ? 'checked' : '' }}
+                                                               class="filter-input rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                        <span class="ml-2 text-sm text-gray-600">{{ $child->name }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
                                 @endforeach
                                 <label class="flex items-center">
                                     <input type="radio" name="category" value="" 
@@ -84,14 +98,65 @@
                             </div>
                         </div>
 
-                        <!-- Featured -->
+                        <!-- Size Filter -->
+                        @if(isset($sizes) && $sizes->count() > 0)
+                            <div class="mb-6">
+                                <h4 class="font-medium text-gray-900 mb-3">Kích thước</h4>
+                                <div class="space-y-2">
+                                    @foreach($sizes as $size)
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="size[]" value="{{ $size }}" 
+                                                   {{ in_array($size, (array) request('size', [])) ? 'checked' : '' }}
+                                                   class="filter-input rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                            <span class="ml-2 text-sm text-gray-700">{{ $size }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Color Filter -->
+                        @if(isset($colors) && $colors->count() > 0)
+                            <div class="mb-6">
+                                <h4 class="font-medium text-gray-900 mb-3">Màu sắc</h4>
+                                <div class="space-y-2">
+                                    @foreach($colors as $color)
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="color[]" value="{{ $color }}" 
+                                                   {{ in_array($color, (array) request('color', [])) ? 'checked' : '' }}
+                                                   class="filter-input rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                            <span class="ml-2 text-sm text-gray-700">{{ $color }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Additional Filters -->
                         <div class="mb-6">
-                            <label class="flex items-center">
-                                <input type="checkbox" name="featured" value="1" 
-                                       {{ request('featured') ? 'checked' : '' }}
-                                       class="filter-input rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                <span class="ml-2 text-sm text-gray-700">Sản phẩm nổi bật</span>
-                            </label>
+                            <h4 class="font-medium text-gray-900 mb-3">Khác</h4>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="featured" value="1" 
+                                           {{ request('featured') ? 'checked' : '' }}
+                                           class="filter-input rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm text-gray-700">Sản phẩm nổi bật</span>
+                                </label>
+                                
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="in_stock" value="1" 
+                                           {{ request('in_stock') ? 'checked' : '' }}
+                                           class="filter-input rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm text-gray-700">Còn hàng</span>
+                                </label>
+                                
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="on_sale" value="1" 
+                                           {{ request('on_sale') ? 'checked' : '' }}
+                                           class="filter-input rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm text-gray-700">Đang giảm giá</span>
+                                </label>
+                            </div>
                         </div>
 
                         <!-- Clear Filters -->
@@ -122,9 +187,11 @@
                             <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Mới nhất</option>
                             <option value="price_asc" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>Giá tăng dần</option>
                             <option value="price_desc" {{ request('sort') == 'price_desc' ? 'selected' : '' }}>Giá giảm dần</option>
-                            <option value="name_asc" {{ request('name_asc') == 'name_asc' ? 'selected' : '' }}>Tên A-Z</option>
+                            <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Tên A-Z</option>
                             <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>Tên Z-A</option>
                             <option value="featured" {{ request('sort') == 'featured' ? 'selected' : '' }}>Nổi bật</option>
+                            <option value="popular" {{ request('sort') == 'popular' ? 'selected' : '' }}>Phổ biến</option>
+                            <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>Đánh giá cao</option>
                         </select>
                     </div>
                 </div>
@@ -133,7 +200,7 @@
                 @if($products->count() > 0)
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         @foreach($products as $product)
-                            <div class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+                            <div class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow flex flex-col h-full">
                                 <!-- Product Image -->
                                 <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-t-lg bg-gray-200">
                                     @if($product->getFirstMediaUrl('images'))
@@ -156,7 +223,7 @@
                                 </div>
 
                                 <!-- Product Info -->
-                                <div class="p-4">
+                                <div class="p-4 flex flex-col flex-grow">
                                     <div class="text-sm text-gray-500 mb-1">
                                         {{ $product->category->name ?? 'N/A' }}
                                         @if($product->brand)
@@ -164,19 +231,19 @@
                                         @endif
                                     </div>
                                     
-                                    <h3 class="text-lg font-medium text-gray-900 mb-2">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-2 line-clamp-2">
                                         <a href="{{ route('products.show', $product) }}" class="hover:text-indigo-600">
                                             {{ $product->name }}
                                         </a>
                                     </h3>
                                     
-                                    <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                                    <p class="text-sm text-gray-600 mb-3 line-clamp-3 flex-grow">
                                         {{ $product->short_description }}
                                     </p>
                                     
-                                    <div class="flex items-center justify-between">
+                                    <div class="flex items-center justify-between mb-4">
                                         <div class="flex items-center space-x-2">
-                                            @if($product->sale_price)
+                                            @if($product->sale_price && $product->sale_price < $product->base_price)
                                                 <span class="text-lg font-bold text-red-600">₫{{ number_format($product->sale_price) }}</span>
                                                 <span class="text-sm text-gray-500 line-through">₫{{ number_format($product->base_price) }}</span>
                                             @else
@@ -189,9 +256,9 @@
                                         </div>
                                     </div>
                                     
-                                    <div class="mt-3">
+                                    <div class="mt-auto">
                                         <a href="{{ route('products.show', $product) }}" 
-                                           class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 text-center block">
+                                           class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 text-center block transition-colors">
                                             Xem chi tiết
                                         </a>
                                     </div>
