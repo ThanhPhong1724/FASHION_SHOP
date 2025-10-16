@@ -67,8 +67,8 @@
                                     <img src="{{ $image->image_url }}" alt="Review image" 
                                          class="w-full h-24 object-cover rounded-lg">
                                     <button type="button" 
-                                            onclick="deleteImage({{ $image->id }})"
-                                            class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600">
+                                            data-image-id="{{ $image->id }}"
+                                            class="delete-image-btn absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600">
                                         ×
                                     </button>
                                 </div>
@@ -161,12 +161,17 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Delete image function
-function deleteImage(imageId) {
-    if (confirm('Bạn có chắc muốn xóa ảnh này?')) {
-        document.getElementById('delete-image-id').value = imageId;
-        document.getElementById('delete-image-form').action = '{{ route("reviews.delete-image", $review) }}';
-        document.getElementById('delete-image-form').submit();
-    }
-}
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.delete-image-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const imageId = this.dataset.imageId;
+            if (confirm('Bạn có chắc muốn xóa ảnh này?')) {
+                document.getElementById('delete-image-id').value = imageId;
+                document.getElementById('delete-image-form').action = '{{ route("reviews.delete-image", $review) }}';
+                document.getElementById('delete-image-form').submit();
+            }
+        });
+    });
+});
 </script>
 @endsection

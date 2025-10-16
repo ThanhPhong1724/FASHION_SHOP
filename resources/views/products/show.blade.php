@@ -51,7 +51,8 @@
                 <!-- Main Image with Zoom -->
                 <div class="relative group">
                     <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200 cursor-zoom-in" 
-                         onclick="openImageModal('{{ $product->getFirstMediaUrl('images', 'preview') }}')">
+                         data-image-url="{{ $product->getFirstMediaUrl('images', 'preview') ?: '' }}"
+                         onclick="openImageModal(this.dataset.imageUrl)">
                         @if($product->getFirstMediaUrl('images'))
                             <img id="main-image" src="{{ $product->getFirstMediaUrl('images', 'preview') }}" 
                                  alt="{{ $product->name }}" 
@@ -86,7 +87,9 @@
                 @if($product->getMedia('images')->count() > 1)
                     <div class="grid grid-cols-4 gap-2">
                         @foreach($product->getMedia('images') as $index => $image)
-                            <button onclick="changeMainImage('{{ $image->getUrl('preview') }}', {{ $index + 1 }})" 
+                            <button data-image-url="{{ $image->getUrl('preview') ?: '' }}" 
+                                    data-image-index="{{ $index + 1 }}"
+                                    onclick="changeMainImage(this.dataset.imageUrl, this.dataset.imageIndex)" 
                                     class="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200 border-2 transition-all duration-200 {{ $index === 0 ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-200 hover:border-gray-300' }}">
                                 <img src="{{ $image->getUrl('thumb') }}" 
                                      alt="{{ $product->name }}" 
@@ -254,11 +257,15 @@
                                         class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-md font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed">
                                     Thêm vào giỏ hàng
                                 </button>
-                                <button type="button" class="px-6 py-3 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                                    </svg>
-                                </button>
+                                @auth
+                                    <button type="button" id="wishlist-btn" 
+                                            class="px-6 py-3 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                                            data-product-id="{{ $product->id }}">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                        </svg>
+                                    </button>
+                                @endauth
                             </div>
                         </form>
                     </div>
@@ -274,10 +281,21 @@
                             </div>
                         </div>
 
-                        <button type="button" id="add-to-cart" 
-                                class="w-full bg-indigo-600 text-white px-6 py-3 rounded-md font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            Thêm vào giỏ hàng
-                        </button>
+                        <div class="flex space-x-4">
+                            <button type="button" id="add-to-cart" 
+                                    class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-md font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                Thêm vào giỏ hàng
+                            </button>
+                            @auth
+                                <button type="button" id="wishlist-btn-simple" 
+                                        class="px-6 py-3 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                                        data-product-id="{{ $product->id }}">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                    </svg>
+                                </button>
+                            @endauth
+                        </div>
                     </div>
                 @endif
 
@@ -305,55 +323,6 @@
             </div>
         @endif
 
-        <!-- Reviews Section -->
-        <div class="mt-16">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">Đánh giá sản phẩm</h2>
-            
-            @if($product->approvedReviews->count() > 0)
-                <div class="space-y-6">
-                    @foreach($product->approvedReviews as $review)
-                        <div class="border-b border-gray-200 pb-6">
-                            <div class="flex items-center space-x-4 mb-2">
-                                <div class="flex items-center">
-                                    @for($i = 1; $i <= 5; $i++)
-                                        @if($i <= $review->rating)
-                                            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                            </svg>
-                                        @else
-                                            <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                            </svg>
-                                        @endif
-                                    @endfor
-                                </div>
-                                <span class="text-sm font-medium text-gray-900">{{ $review->user->name }}</span>
-                                @if($review->is_verified_purchase)
-                                    <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Đã mua hàng</span>
-                                @endif
-                                <span class="text-sm text-gray-500">{{ $review->created_at->format('d/m/Y') }}</span>
-                            </div>
-                            
-                            @if($review->title)
-                                <h4 class="font-medium text-gray-900 mb-1">{{ $review->title }}</h4>
-                            @endif
-                            
-                            @if($review->content)
-                                <p class="text-gray-600">{{ $review->content }}</p>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="text-center py-8">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">Chưa có đánh giá</h3>
-                    <p class="mt-1 text-sm text-gray-500">Hãy là người đầu tiên đánh giá sản phẩm này.</p>
-                </div>
-            @endif
-        </div>
 
         <!-- Related Products -->
         @if($relatedProducts->count() > 0)
@@ -441,7 +410,8 @@
                                     <div class="flex items-center">
                                         <span class="text-sm text-gray-600 w-8">{{ $rating }}★</span>
                                         <div class="flex-1 mx-2 bg-gray-200 rounded-full h-2">
-                                            <div class="bg-yellow-400 h-2 rounded-full" style="width: {{ $percentage }}%"></div>
+                                            <div class="bg-yellow-400 h-2 rounded-full transition-all duration-300" 
+                                                 data-width="{{ number_format($percentage, 1) }}"></div>
                                         </div>
                                         <span class="text-sm text-gray-600 w-8">{{ $count }}</span>
                                     </div>
@@ -565,7 +535,8 @@
                                     @foreach($review->images as $image)
                                         <img src="{{ $image->image_url }}" alt="Review image" 
                                              class="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-75"
-                                             onclick="openImageModal('{{ $image->image_url }}')">
+                                             data-image-url="{{ $image->image_url }}"
+                                             onclick="openImageModal(this.dataset.imageUrl)">
                                     @endforeach
                                 </div>
                             @endif
@@ -611,8 +582,8 @@
 <script>
 // Image gallery variables
 let currentImageIndex = 0;
-const totalImages = {{ $product->getMedia('images')->count() }};
-const imageUrls = @json($product->getMedia('images')->pluck('url'));
+const totalImages = parseInt('{{ $product->getMedia("images")->count() ?: 0 }}');
+const imageUrls = JSON.parse('{!! json_encode($product->getMedia("images")->pluck("url") ?: []) !!}');
 
 // Image gallery
 function changeMainImage(imageUrl, index) {
@@ -686,6 +657,11 @@ document.getElementById('image-modal').addEventListener('click', function(e) {
 
 // Star rating functionality
 document.addEventListener('DOMContentLoaded', function() {
+    // Set progress bar widths
+    document.querySelectorAll('[data-width]').forEach(bar => {
+        bar.style.width = bar.dataset.width + '%';
+    });
+    
     const stars = document.querySelectorAll('.star-rating');
     const ratingInput = document.getElementById('rating-input');
     
@@ -736,7 +712,7 @@ document.addEventListener('keydown', function(e) {
     }
 });
         // Product variants data
-        const variants = @json($product->variants);
+        const variants = JSON.parse('{!! json_encode($product->variants) !!}');
         let selectedSize = null;
         let selectedColor = null;
         let selectedVariant = null;
@@ -826,17 +802,6 @@ document.addEventListener('keydown', function(e) {
             }, 3000);
         }
 
-// Image gallery
-function changeMainImage(imageUrl) {
-    document.getElementById('main-image').src = imageUrl;
-    
-    // Update active thumbnail
-    document.querySelectorAll('.aspect-w-1 button').forEach(btn => {
-        btn.classList.remove('ring-2', 'ring-indigo-500');
-    });
-    event.target.closest('button').classList.add('ring-2', 'ring-indigo-500');
-}
-
 // Variant selection
 document.querySelectorAll('.size-option').forEach(btn => {
     btn.addEventListener('click', function() {
@@ -907,27 +872,92 @@ document.getElementById('decrease-qty').addEventListener('click', function() {
     }
 });
 
-// Add to cart
-document.getElementById('add-to-cart').addEventListener('click', function() {
-    const quantity = parseInt(document.getElementById('quantity').value);
-    
-    if (!selectedVariant && variants.length > 0) {
-        alert('Vui lòng chọn kích thước và màu sắc');
-        return;
-    }
-    
-    if (selectedVariant && selectedVariant.stock < quantity) {
-        alert('Không đủ hàng trong kho');
-        return;
-    }
-    
-    // TODO: Implement actual cart functionality
-    alert('Đã thêm vào giỏ hàng! (Chức năng sẽ được triển khai trong Sprint 3)');
-});
-
 // Initialize
 if (variants.length > 0) {
     updateVariant();
+}
+
+// Wishlist functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const wishlistBtn = document.getElementById('wishlist-btn');
+    const wishlistBtnSimple = document.getElementById('wishlist-btn-simple');
+    
+    // Check wishlist status on page load
+    checkWishlistStatus();
+    
+    // Add event listeners
+    if (wishlistBtn) {
+        wishlistBtn.addEventListener('click', toggleWishlist);
+    }
+    if (wishlistBtnSimple) {
+        wishlistBtnSimple.addEventListener('click', toggleWishlist);
+    }
+});
+
+function checkWishlistStatus() {
+    const productId = document.querySelector('[data-product-id]')?.dataset.productId;
+    if (!productId) return;
+    
+    fetch(`/wishlist/${productId}/check`)
+        .then(response => response.json())
+        .then(data => {
+            updateWishlistButton(data.in_wishlist);
+        })
+        .catch(error => {
+            console.error('Error checking wishlist status:', error);
+        });
+}
+
+function toggleWishlist() {
+    const productId = this.dataset.productId;
+    
+    fetch(`/wishlist/${productId}/toggle`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateWishlistButton(data.action === 'added');
+            updateWishlistCount(data.wishlist_count);
+            showNotification(data.message, 'success');
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error toggling wishlist:', error);
+        showNotification('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+    });
+}
+
+function updateWishlistButton(inWishlist) {
+    const wishlistBtn = document.getElementById('wishlist-btn');
+    const wishlistBtnSimple = document.getElementById('wishlist-btn-simple');
+    const buttons = [wishlistBtn, wishlistBtnSimple].filter(Boolean);
+    
+    buttons.forEach(btn => {
+        const svg = btn.querySelector('svg path');
+        if (inWishlist) {
+            btn.classList.add('text-red-500', 'border-red-300');
+            btn.classList.remove('text-gray-700', 'border-gray-300');
+            svg.setAttribute('fill', 'currentColor');
+        } else {
+            btn.classList.remove('text-red-500', 'border-red-300');
+            btn.classList.add('text-gray-700', 'border-gray-300');
+            svg.removeAttribute('fill');
+        }
+    });
+}
+
+function updateWishlistCount(count) {
+    const wishlistCountElements = document.querySelectorAll('.wishlist-count');
+    wishlistCountElements.forEach(element => {
+        element.textContent = count;
+    });
 }
 </script>
 @endsection

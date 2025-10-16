@@ -91,6 +91,17 @@ class Product extends Model implements HasMedia
         return $this->hasMany(Review::class)->approved();
     }
 
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    public function wishlistUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'wishlists')
+            ->withTimestamps();
+    }
+
     /**
      * Get the primary image for the product.
      */

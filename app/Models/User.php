@@ -88,4 +88,15 @@ class User extends Authenticatable
             ->withPivot('order_id', 'used_at')
             ->withTimestamps();
     }
+
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    public function wishlistProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'wishlists')
+            ->withTimestamps();
+    }
 }

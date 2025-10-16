@@ -67,4 +67,11 @@ Route::middleware(['auth', 'user.active'])->group(function () {
     Route::patch('/reviews/{review}', [App\Http\Controllers\ReviewController::class, 'update'])->name('reviews.update');
     Route::delete('/reviews/{review}', [App\Http\Controllers\ReviewController::class, 'destroy'])->name('reviews.destroy');
     Route::delete('/reviews/{review}/images', [App\Http\Controllers\ReviewController::class, 'deleteImage'])->name('reviews.delete-image');
+    
+    // Wishlist
+    Route::get('/wishlist', [App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/{product}', [App\Http\Controllers\WishlistController::class, 'store'])->name('wishlist.store');
+    Route::delete('/wishlist/{product}', [App\Http\Controllers\WishlistController::class, 'destroy'])->name('wishlist.destroy');
+    Route::post('/wishlist/{product}/toggle', [App\Http\Controllers\WishlistController::class, 'toggle'])->name('wishlist.toggle');
+    Route::get('/wishlist/{product}/check', [App\Http\Controllers\WishlistController::class, 'check'])->name('wishlist.check');
 });
