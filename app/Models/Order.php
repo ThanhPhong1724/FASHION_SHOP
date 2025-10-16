@@ -30,6 +30,7 @@ class Order extends Model
         'guest_phone',
         'shipped_at',
         'delivered_at',
+        'cancelled_at',
     ];
 
     protected $casts = [

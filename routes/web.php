@@ -78,4 +78,9 @@ Route::middleware(['auth', 'user.active'])->group(function () {
     // Addresses
     Route::resource('addresses', App\Http\Controllers\AddressController::class);
     Route::post('/addresses/{address}/set-default', [App\Http\Controllers\AddressController::class, 'setDefault'])->name('addresses.set-default');
+    
+    // Orders
+    Route::resource('orders', App\Http\Controllers\OrderController::class)->only(['index', 'show']);
+    Route::post('/orders/{order}/cancel', [App\Http\Controllers\OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{order}/reorder', [App\Http\Controllers\OrderController::class, 'reorder'])->name('orders.reorder');
 });
