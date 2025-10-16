@@ -25,6 +25,7 @@ class User extends Authenticatable
         'password',
         'phone',
         'avatar',
+        'is_active',
     ];
 
     /**
@@ -47,7 +48,16 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Check if user is active
+     */
+    public function isActive(): bool
+    {
+        return $this->is_active ?? true;
     }
 
     // Relationships
