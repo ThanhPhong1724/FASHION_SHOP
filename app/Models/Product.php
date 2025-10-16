@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -100,6 +101,14 @@ class Product extends Model implements HasMedia
     {
         return $this->belongsToMany(User::class, 'wishlists')
             ->withTimestamps();
+    }
+
+    /**
+     * Get the order items for the product through variants.
+     */
+    public function orderItems(): HasManyThrough
+    {
+        return $this->hasManyThrough(OrderItem::class, ProductVariant::class, 'product_id', 'product_variant_id');
     }
 
     /**

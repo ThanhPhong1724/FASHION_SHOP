@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="py-12">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div style="min-width: 1736px;" class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6 text-gray-900">
                 <div class="flex justify-between items-center mb-6">
@@ -118,9 +118,9 @@
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
                                                 <div class="h-10 w-10 flex-shrink-0">
-                                                    @if($product['get_first_media_url'])
-                                                        <img src="{{ $product['get_first_media_url'] }}" 
-                                                             alt="{{ $product['name'] }}"
+                                                    @if($product->getFirstMediaUrl('images'))
+                                                        <img src="{{ $product->getFirstMediaUrl('images', 'preview') }}" 
+                                                             alt="{{ $product->name }}"
                                                              class="h-10 w-10 rounded-lg object-cover">
                                                     @else
                                                         <div class="h-10 w-10 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -131,28 +131,28 @@
                                                     @endif
                                                 </div>
                                                 <div class="ml-4">
-                                                    <div class="text-sm font-medium text-gray-900">{{ $product['name'] }}</div>
-                                                    <div class="text-sm text-gray-500">SKU: {{ $product['sku'] }}</div>
+                                                    <div class="text-sm font-medium text-gray-900">{{ $product->name }}</div>
+                                                    <div class="text-sm text-gray-500">SKU: {{ $product->sku }}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $product['category']['name'] ?? 'N/A' }}
+                                            {{ $product->category->name ?? 'N/A' }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $product['brand']['name'] ?? 'N/A' }}
+                                            {{ $product->brand->name ?? 'N/A' }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ number_format($product['base_price'], 0, ',', '.') }} ₫
+                                            {{ number_format($product->base_price, 0, ',', '.') }} ₫
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ number_format($product['total_sold']) }}
+                                            {{ number_format($product->total_sold) }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ number_format($product['total_revenue'] ?? 0, 0, ',', '.') }} ₫
+                                            {{ number_format($product->total_revenue ?? 0, 0, ',', '.') }} ₫
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ number_format($product['views_count']) }}
+                                            {{ number_format($product->views_count) }}
                                         </td>
                                     </tr>
                                 @empty
@@ -180,14 +180,14 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse($lowStock as $product)
-                                    @foreach($product['variants'] as $variant)
+                                    @foreach($product->variants as $variant)
                                         <tr>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="flex items-center">
                                                     <div class="h-10 w-10 flex-shrink-0">
-                                                        @if($product['get_first_media_url'])
-                                                            <img src="{{ $product['get_first_media_url'] }}" 
-                                                                 alt="{{ $product['name'] }}"
+                                                        @if($product->getFirstMediaUrl('images'))
+                                                            <img src="{{ $product->getFirstMediaUrl('images', 'preview') }}" 
+                                                                 alt="{{ $product->name }}"
                                                                  class="h-10 w-10 rounded-lg object-cover">
                                                         @else
                                                             <div class="h-10 w-10 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -198,25 +198,25 @@
                                                         @endif
                                                     </div>
                                                     <div class="ml-4">
-                                                        <div class="text-sm font-medium text-gray-900">{{ $product['name'] }}</div>
-                                                        <div class="text-sm text-gray-500">SKU: {{ $product['sku'] }}</div>
+                                                        <div class="text-sm font-medium text-gray-900">{{ $product->name }}</div>
+                                                        <div class="text-sm text-gray-500">SKU: {{ $product->sku }}</div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                @if($variant['size']) Size: {{ $variant['size'] }} @endif
-                                                @if($variant['color']) - Màu: {{ $variant['color'] }} @endif
+                                                @if($variant->size) Size: {{ $variant->size }} @endif
+                                                @if($variant->color) - Màu: {{ $variant->color }} @endif
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ number_format($variant['stock']) }}
+                                                {{ number_format($variant->stock) }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                    @if($variant['stock'] <= 0) bg-red-100 text-red-800
-                                                    @elseif($variant['stock'] <= 5) bg-orange-100 text-orange-800
+                                                    @if($variant->stock <= 0) bg-red-100 text-red-800
+                                                    @elseif($variant->stock <= 5) bg-orange-100 text-orange-800
                                                     @else bg-yellow-100 text-yellow-800 @endif">
-                                                    @if($variant['stock'] <= 0) Hết hàng
-                                                    @elseif($variant['stock'] <= 5) Sắp hết
+                                                    @if($variant->stock <= 0) Hết hàng
+                                                    @elseif($variant->stock <= 5) Sắp hết
                                                     @else Còn ít
                                                     @endif
                                                 </span>

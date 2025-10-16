@@ -74,4 +74,8 @@ Route::middleware(['auth', 'user.active'])->group(function () {
     Route::delete('/wishlist/{product}', [App\Http\Controllers\WishlistController::class, 'destroy'])->name('wishlist.destroy');
     Route::post('/wishlist/{product}/toggle', [App\Http\Controllers\WishlistController::class, 'toggle'])->name('wishlist.toggle');
     Route::get('/wishlist/{product}/check', [App\Http\Controllers\WishlistController::class, 'check'])->name('wishlist.check');
+    
+    // Addresses
+    Route::resource('addresses', App\Http\Controllers\AddressController::class);
+    Route::post('/addresses/{address}/set-default', [App\Http\Controllers\AddressController::class, 'setDefault'])->name('addresses.set-default');
 });

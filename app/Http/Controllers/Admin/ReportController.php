@@ -288,7 +288,7 @@ class ReportController extends Controller
     /**
      * Get best selling products
      */
-    private function getBestSellingProducts(string $dateFrom, string $dateTo): array
+    private function getBestSellingProducts(string $dateFrom, string $dateTo)
     {
         return Product::with(['category', 'brand'])
             ->withCount(['orderItems as total_sold' => function ($query) use ($dateFrom, $dateTo) {
@@ -305,14 +305,13 @@ class ReportController extends Controller
             }], 'subtotal')
             ->orderBy('total_sold', 'desc')
             ->limit(20)
-            ->get()
-            ->toArray();
+            ->get();
     }
 
     /**
      * Get low stock products
      */
-    private function getLowStockProducts(): array
+    private function getLowStockProducts()
     {
         return Product::with(['variants'])
             ->whereHas('variants', function ($query) {
@@ -321,8 +320,7 @@ class ReportController extends Controller
             ->with(['variants' => function ($query) {
                 $query->where('stock', '<=', 10);
             }])
-            ->get()
-            ->toArray();
+            ->get();
     }
 
     /**
