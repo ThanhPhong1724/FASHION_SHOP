@@ -18,39 +18,56 @@
     <div class="min-h-screen">
         <!-- Navigation -->
         <nav class="bg-white shadow">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-full mx-auto px-2 sm:px-4 lg:px-6">
                 <div class="flex justify-between h-16">
                     <div class="flex">
                         <!-- Logo -->
                         <div class="shrink-0 flex items-center">
-                            <a href="{{ route('admin.dashboard') }}" class="text-xl font-bold text-gray-800">
-                                Fashion Shop Admin
+                            <a href="{{ route('admin.dashboard') }}" class="text-lg font-bold text-gray-800">
+                                Fashion Admin
                             </a>
                         </div>
 
                         <!-- Navigation Links -->
-        <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-            <a href="{{ route('admin.dashboard') }}" class="border-indigo-400 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+        <div class="hidden space-x-4 lg:space-x-6 xl:space-x-8 sm:-my-px sm:ml-6 lg:ml-8 xl:ml-10 sm:flex">
+            <a href="{{ route('admin.dashboard') }}" class="border-indigo-400 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-xs lg:text-sm font-medium">
                 Dashboard
             </a>
-            <a href="{{ route('admin.orders.index') }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+            <a href="{{ route('admin.orders.index') }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-xs lg:text-sm font-medium">
                 Đơn hàng
             </a>
-            <a href="{{ route('admin.users.index') }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+            <a href="{{ route('admin.users.index') }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-xs lg:text-sm font-medium">
                 Người dùng
             </a>
-            <a href="{{ route('admin.categories.index') }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+            <a href="{{ route('admin.categories.index') }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-xs lg:text-sm font-medium">
                 Danh mục
             </a>
-            <a href="{{ route('admin.brands.index') }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+            <a href="{{ route('admin.brands.index') }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-xs lg:text-sm font-medium">
                 Thương hiệu
             </a>
-            <a href="{{ route('admin.products.index') }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+            <a href="{{ route('admin.products.index') }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-xs lg:text-sm font-medium">
                 Sản phẩm
             </a>
-            <a href="{{ route('admin.coupons.index') }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+            <a href="{{ route('admin.coupons.index') }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-xs lg:text-sm font-medium">
                 Mã giảm giá
             </a>
+            <a href="{{ route('admin.reviews.index') }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-xs lg:text-sm font-medium">
+                Đánh giá
+            </a>
+            <div class="relative group">
+                <button class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-xs lg:text-sm font-medium">
+                    Báo cáo
+                    <svg class="ml-1 h-3 w-3 lg:h-4 lg:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div class="py-1">
+                        <a href="{{ route('admin.reports.sales') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Báo cáo doanh thu</a>
+                        <a href="{{ route('admin.reports.products') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Báo cáo sản phẩm</a>
+                    </div>
+                </div>
+            </div>
         </div>
                     </div>
 

@@ -115,7 +115,7 @@ class ProductController extends Controller
             abort(404);
         }
 
-        $product->load(['category', 'brand', 'tags', 'variants', 'reviews.user']);
+        $product->load(['category', 'brand', 'tags', 'variants', 'approvedReviews.user', 'approvedReviews.images']);
         
         // Increment view count
         $product->increment('views_count');

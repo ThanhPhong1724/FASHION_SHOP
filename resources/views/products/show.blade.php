@@ -408,6 +408,191 @@
                 </div>
             </div>
         @endif
+
+        <!-- Reviews Section -->
+        <div class="mt-16">
+            <div class="border-t border-gray-200 pt-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-8">Đánh giá sản phẩm</h2>
+                
+                <!-- Review Summary -->
+                <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="text-center">
+                            <div class="text-4xl font-bold text-gray-900 mb-2">
+                                {{ number_format($product->approvedReviews->avg('rating') ?? 0, 1) }}
+                            </div>
+                            <div class="flex justify-center mb-2">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <svg class="h-5 w-5 {{ $i <= round($product->approvedReviews->avg('rating') ?? 0) ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                    </svg>
+                                @endfor
+                            </div>
+                            <p class="text-sm text-gray-600">{{ $product->approvedReviews->count() }} đánh giá</p>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <div class="space-y-2">
+                                @for($rating = 5; $rating >= 1; $rating--)
+                                    @php
+                                        $count = $product->approvedReviews->where('rating', $rating)->count();
+                                        $percentage = $product->approvedReviews->count() > 0 ? ($count / $product->approvedReviews->count()) * 100 : 0;
+                                    @endphp
+                                    <div class="flex items-center">
+                                        <span class="text-sm text-gray-600 w-8">{{ $rating }}★</span>
+                                        <div class="flex-1 mx-2 bg-gray-200 rounded-full h-2">
+                                            <div class="bg-yellow-400 h-2 rounded-full" style="width: {{ $percentage }}%"></div>
+                                        </div>
+                                        <span class="text-sm text-gray-600 w-8">{{ $count }}</span>
+                                    </div>
+                                @endfor
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Write Review Form (for authenticated users who purchased) -->
+                @auth
+                    @php
+                        $hasPurchased = \App\Models\OrderItem::whereHas('order', function($query) {
+                            $query->where('user_id', auth()->id())->where('status', 'completed');
+                        })->where('product_name', $product->name)->exists();
+                        
+                        $hasReviewed = \App\Models\Review::where('product_id', $product->id)
+                            ->where('user_id', auth()->id())->exists();
+                    @endphp
+                    
+                    @if($hasPurchased && !$hasReviewed)
+                        <div class="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Viết đánh giá</h3>
+                            
+                            <form method="POST" action="{{ route('reviews.store', $product) }}" enctype="multipart/form-data">
+                                @csrf
+                                
+                                <!-- Rating -->
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Đánh giá của bạn</label>
+                                    <div class="flex space-x-1" id="rating-stars">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <button type="button" class="star-rating text-2xl text-gray-300 hover:text-yellow-400" data-rating="{{ $i }}">
+                                                ★
+                                            </button>
+                                        @endfor
+                                    </div>
+                                    <input type="hidden" name="rating" id="rating-input" value="5" required>
+                                </div>
+
+                                <!-- Title -->
+                                <div class="mb-4">
+                                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Tiêu đề (tùy chọn)</label>
+                                    <input type="text" id="title" name="title" 
+                                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                           placeholder="Tóm tắt đánh giá của bạn">
+                                </div>
+
+                                <!-- Content -->
+                                <div class="mb-4">
+                                    <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Nội dung đánh giá *</label>
+                                    <textarea id="content" name="content" rows="4" required
+                                              class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                              placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."></textarea>
+                                </div>
+
+                                <!-- Images -->
+                                <div class="mb-4">
+                                    <label for="images" class="block text-sm font-medium text-gray-700 mb-2">Hình ảnh (tùy chọn)</label>
+                                    <input type="file" id="images" name="images[]" multiple accept="image/*"
+                                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    <p class="text-sm text-gray-500 mt-1">Có thể tải lên tối đa 5 hình ảnh (JPG, PNG, GIF - tối đa 2MB mỗi ảnh)</p>
+                                </div>
+
+                                <button type="submit" 
+                                        class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    Gửi đánh giá
+                                </button>
+                            </form>
+                        </div>
+                    @elseif($hasReviewed)
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+                            <p class="text-blue-800">Bạn đã đánh giá sản phẩm này rồi.</p>
+                        </div>
+                    @else
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-8">
+                            <p class="text-gray-600">Bạn cần mua sản phẩm này để có thể đánh giá.</p>
+                        </div>
+                    @endif
+                @endauth
+
+                <!-- Reviews List -->
+                <div class="space-y-6">
+                    @forelse($product->approvedReviews as $review)
+                        <div class="bg-white border border-gray-200 rounded-lg p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                        <span class="text-sm font-medium text-gray-600">
+                                            {{ substr($review->user->name, 0, 1) }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-900">{{ $review->user->name }}</p>
+                                        <div class="flex items-center">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                <svg class="h-4 w-4 {{ $i <= $review->rating ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                                </svg>
+                                            @endfor
+                                            <span class="ml-2 text-sm text-gray-500">{{ $review->created_at->format('d/m/Y') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                @if($review->is_verified_purchase)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Đã mua hàng
+                                    </span>
+                                @endif
+                            </div>
+
+                            @if($review->title)
+                                <h4 class="font-medium text-gray-900 mb-2">{{ $review->title }}</h4>
+                            @endif
+
+                            <p class="text-gray-700 mb-4">{{ $review->content }}</p>
+
+                            @if($review->images->count() > 0)
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                                    @foreach($review->images as $image)
+                                        <img src="{{ $image->image_url }}" alt="Review image" 
+                                             class="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-75"
+                                             onclick="openImageModal('{{ $image->image_url }}')">
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            @auth
+                                @if($review->user_id === auth()->id())
+                                    <div class="flex space-x-2">
+                                        <a href="{{ route('reviews.edit', $review) }}" 
+                                           class="text-indigo-600 hover:text-indigo-800 text-sm">Chỉnh sửa</a>
+                                        <form method="POST" action="{{ route('reviews.destroy', $review) }}" class="inline"
+                                              onsubmit="return confirm('Bạn có chắc muốn xóa đánh giá này?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-800 text-sm">Xóa</button>
+                                        </form>
+                                    </div>
+                                @endif
+                            @endauth
+                        </div>
+                    @empty
+                        <div class="text-center py-8">
+                            <p class="text-gray-500">Chưa có đánh giá nào cho sản phẩm này.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -496,6 +681,47 @@ document.addEventListener('keydown', function(e) {
 document.getElementById('image-modal').addEventListener('click', function(e) {
     if (e.target === this) {
         closeImageModal();
+    }
+});
+
+// Star rating functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.star-rating');
+    const ratingInput = document.getElementById('rating-input');
+    
+    if (stars.length > 0 && ratingInput) {
+        let currentRating = parseInt(ratingInput.value);
+        
+        // Initialize stars
+        updateStars(currentRating);
+        
+        stars.forEach((star, index) => {
+            star.addEventListener('click', function() {
+                currentRating = index + 1;
+                ratingInput.value = currentRating;
+                updateStars(currentRating);
+            });
+            
+            star.addEventListener('mouseenter', function() {
+                updateStars(index + 1);
+            });
+        });
+        
+        document.getElementById('rating-stars').addEventListener('mouseleave', function() {
+            updateStars(currentRating);
+        });
+    }
+    
+    function updateStars(rating) {
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.remove('text-gray-300');
+                star.classList.add('text-yellow-400');
+            } else {
+                star.classList.remove('text-yellow-400');
+                star.classList.add('text-gray-300');
+            }
+        });
     }
 });
 
