@@ -17,7 +17,7 @@ class CheckoutController extends Controller
     /**
      * Display checkout page
      */
-    public function index(): View
+    public function index()
     {
         $cart = $this->getOrCreateCart();
         $cart->load(['items.variant.product.media']);
@@ -37,13 +37,14 @@ class CheckoutController extends Controller
     public function process(Request $request): JsonResponse
     {
         $request->validate([
-            'shipping_address' => 'required|array',
-            'shipping_address.name' => 'required|string|max:255',
-            'shipping_address.phone' => 'required|string|max:20',
-            'shipping_address.address_line1' => 'required|string|max:255',
-            'shipping_address.city' => 'required|string|max:100',
-            'shipping_address.district' => 'required|string|max:100',
-            'shipping_address.ward' => 'required|string|max:100',
+            'saved_address' => 'nullable|exists:addresses,id',
+            'shipping_address' => 'required_without:saved_address|array',
+            'shipping_address.name' => 'required_without:saved_address|string|max:255',
+            'shipping_address.phone' => 'required_without:saved_address|string|max:20',
+            'shipping_address.address_line1' => 'required_without:saved_address|string|max:255',
+            'shipping_address.city' => 'required_without:saved_address|string|max:100',
+            'shipping_address.district' => 'required_without:saved_address|string|max:100',
+            'shipping_address.ward' => 'required_without:saved_address|string|max:100',
             'payment_method' => 'required|in:cod,bank_transfer,credit_card,momo,zalopay',
             'notes' => 'nullable|string|max:1000',
         ]);
@@ -61,7 +62,13 @@ class CheckoutController extends Controller
             DB::beginTransaction();
 
             // 1. Create or get shipping address
-            $shippingAddress = $this->createOrGetAddress($request->shipping_address);
+            if ($request->has('saved_address') && $request->saved_address) {
+                // Use saved address
+                $shippingAddress = Address::findOrFail($request->saved_address);
+            } else {
+                // Create new address
+                $shippingAddress = $this->createOrGetAddress($request->shipping_address);
+            }
 
             // 2. Create order
             $order = $this->createOrder($cart, $shippingAddress, $request);
@@ -152,8 +159,20 @@ class CheckoutController extends Controller
             ]);
         } else {
             // For guests, create temporary address (not saved to DB)
-            $address = new Address($addressData);
-            $address->id = 0; // Temporary ID
+            $address = new Address([
+                'user_id' => null,
+                'name' => $addressData['name'],
+                'phone' => $addressData['phone'],
+                'address_line1' => $addressData['address_line1'],
+                'address_line2' => $addressData['address_line2'] ?? null,
+                'city' => $addressData['city'],
+                'district' => $addressData['district'],
+                'ward' => $addressData['ward'],
+                'postal_code' => $addressData['postal_code'] ?? null,
+                'is_default' => false,
+                'type' => 'other',
+            ]);
+            $address->save(); // Save to get real ID
         }
 
         return $address;

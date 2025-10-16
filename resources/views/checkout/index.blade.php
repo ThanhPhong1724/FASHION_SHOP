@@ -230,11 +230,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle saved address selection
     const savedAddressRadios = document.querySelectorAll('input[name="saved_address"]');
     const newAddressForm = document.getElementById('new-address-form');
+    const newAddressInputs = newAddressForm.querySelectorAll('input[required]');
     
     savedAddressRadios.forEach(radio => {
         radio.addEventListener('change', function() {
             if (this.checked) {
                 newAddressForm.style.display = 'none';
+                // Remove required attribute when form is hidden
+                newAddressInputs.forEach(input => {
+                    input.removeAttribute('required');
+                });
             }
         });
     });
@@ -244,8 +249,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedSavedAddress = document.querySelector('input[name="saved_address"]:checked');
         if (selectedSavedAddress) {
             newAddressForm.style.display = 'none';
+            // Remove required attribute when form is hidden
+            newAddressInputs.forEach(input => {
+                input.removeAttribute('required');
+            });
         } else {
             newAddressForm.style.display = 'block';
+            // Add required attribute when form is visible
+            newAddressInputs.forEach(input => {
+                input.setAttribute('required', 'required');
+            });
         }
     };
     
@@ -260,7 +273,34 @@ document.addEventListener('DOMContentLoaded', function() {
         placeOrderBtn.disabled = true;
         placeOrderBtn.textContent = 'Đang xử lý...';
         
-        const formData = new FormData(form);
+        // Prepare form data
+        const formData = new FormData();
+        
+        // Add CSRF token
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+        
+        // Add payment method
+        formData.append('payment_method', document.querySelector('input[name="payment_method"]:checked').value);
+        
+        // Add notes
+        const notes = document.querySelector('textarea[name="notes"]').value;
+        if (notes) {
+            formData.append('notes', notes);
+        }
+        
+        // Add address data
+        const selectedSavedAddress = document.querySelector('input[name="saved_address"]:checked');
+        if (selectedSavedAddress) {
+            formData.append('saved_address', selectedSavedAddress.value);
+        } else {
+            // Add new address data
+            const addressInputs = document.querySelectorAll('#new-address-form input');
+            addressInputs.forEach(input => {
+                if (input.name && input.value) {
+                    formData.append(input.name, input.value);
+                }
+            });
+        }
         
         fetch('/checkout', {
             method: 'POST',
