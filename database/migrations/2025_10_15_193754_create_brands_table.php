@@ -15,10 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
-            $table->string('logo')->nullable();
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->string('seo_title')->nullable();
+            $table->string('seo_description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
             
             // Indexes
             $table->index('slug');
