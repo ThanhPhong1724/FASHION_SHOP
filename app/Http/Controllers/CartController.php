@@ -80,12 +80,26 @@ class CartController extends Controller
      */
     public function update(Request $request, CartItem $cartItem): JsonResponse
     {
+        \Log::info('Cart update request', [
+            'cart_item_id' => $cartItem->id,
+            'quantity' => $request->quantity,
+            'user_id' => auth()->id(),
+            'session_id' => session()->getId()
+        ]);
+
         $request->validate([
             'quantity' => 'required|integer|min:1|max:99',
         ]);
 
         // Check if user owns this cart item
-        if ($cartItem->cart->user_id !== auth()->id() && $cartItem->cart->session_id !== session()->getId()) {
+        $cart = $this->getOrCreateCart();
+        \Log::info('Cart ownership check', [
+            'cart_item_cart_id' => $cartItem->cart_id,
+            'current_cart_id' => $cart->id,
+            'match' => $cartItem->cart_id === $cart->id
+        ]);
+        
+        if ($cartItem->cart_id !== $cart->id) {
             return response()->json(['success' => false, 'message' => 'Không có quyền truy cập.'], 403);
         }
 
@@ -114,7 +128,8 @@ class CartController extends Controller
     public function remove(CartItem $cartItem): JsonResponse
     {
         // Check if user owns this cart item
-        if ($cartItem->cart->user_id !== auth()->id() && $cartItem->cart->session_id !== session()->getId()) {
+        $cart = $this->getOrCreateCart();
+        if ($cartItem->cart_id !== $cart->id) {
             return response()->json(['success' => false, 'message' => 'Không có quyền truy cập.'], 403);
         }
 

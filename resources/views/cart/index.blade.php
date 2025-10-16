@@ -154,11 +154,15 @@
     </div>
 </div>
 
-@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Cart page loaded');
+    
     // Update quantity
-    document.querySelectorAll('.quantity-select').forEach(select => {
+    const quantitySelects = document.querySelectorAll('.quantity-select');
+    console.log('Found quantity selects:', quantitySelects.length);
+    
+    quantitySelects.forEach(select => {
         select.addEventListener('change', function() {
             const itemId = this.dataset.itemId;
             const quantity = this.value;
@@ -168,7 +172,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Remove item
-    document.querySelectorAll('.remove-item').forEach(button => {
+    const removeButtons = document.querySelectorAll('.remove-item');
+    console.log('Found remove buttons:', removeButtons.length);
+    
+    removeButtons.forEach(button => {
         button.addEventListener('click', function() {
             const itemId = this.dataset.itemId;
             
@@ -179,6 +186,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function updateCartItem(itemId, quantity) {
+        console.log('Updating cart item:', itemId, 'quantity:', quantity);
+        
         fetch(`/cart/items/${itemId}`, {
             method: 'PATCH',
             headers: {
@@ -187,8 +196,12 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({ quantity: quantity })
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Response data:', data);
             if (data.success) {
                 // Update subtotal
                 const itemElement = document.querySelector(`[data-cart-item="${itemId}"]`);
@@ -214,18 +227,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function removeCartItem(itemId) {
+        console.log('Removing cart item:', itemId);
+        
         fetch(`/cart/items/${itemId}`, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Delete response status:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Delete response data:', data);
             if (data.success) {
                 // Remove item from DOM
                 const itemElement = document.querySelector(`[data-cart-item="${itemId}"]`);
-                itemElement.remove();
+                if (itemElement) {
+                    itemElement.remove();
+                }
                 
                 // Update cart totals
                 document.querySelector('.cart-subtotal').textContent = new Intl.NumberFormat('vi-VN').format(data.total) + 'đ';
@@ -274,5 +295,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endpush
 @endsection
