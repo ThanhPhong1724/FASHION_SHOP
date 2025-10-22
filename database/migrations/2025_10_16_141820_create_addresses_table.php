@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('ward');
             $table->string('postal_code')->nullable();
             $table->boolean('is_default')->default(false);
-            $table->enum('type', ['home', 'office', 'other'])->default('home');
+            $table->enum('type', ['shipping', 'billing'])->default('shipping');
             $table->timestamps();
 
             $table->index(['user_id', 'is_default']);

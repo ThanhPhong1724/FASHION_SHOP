@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('shipping_fee', 12, 2)->default(0);
             $table->decimal('tax', 12, 2)->default(0);
             $table->decimal('total', 12, 2);
-            $table->enum('payment_method', ['cod', 'bank_transfer', 'credit_card', 'momo', 'zalopay'])->default('cod');
+            $table->enum('payment_method', ['cod', 'bank_transfer', 'credit_card', 'momo', 'zalopay', 'vnpay'])->default('cod');
             $table->enum('payment_status', ['pending', 'paid', 'failed', 'refunded'])->default('pending');
             $table->foreignId('shipping_address_id')->constrained('addresses')->cascadeOnDelete();
             $table->foreignId('billing_address_id')->nullable()->constrained('addresses')->cascadeOnDelete();

@@ -93,7 +93,7 @@ class CheckoutController extends Controller
                 $this->createOrderItems($order, $cart);
                 
                 // Update order status to pending payment
-                $order->update(['status' => 'pending_payment']);
+                $order->update(['status' => 'pending']);
                 
                 DB::commit();
                 
@@ -325,7 +325,7 @@ class CheckoutController extends Controller
                 'ward' => $addressData['ward'],
                 'postal_code' => $addressData['postal_code'] ?? null,
                 'is_default' => false,
-                'type' => 'other',
+                'type' => 'shipping',
             ]);
         } else {
             // For guests, create temporary address (not saved to DB)
@@ -340,7 +340,7 @@ class CheckoutController extends Controller
                 'ward' => $addressData['ward'],
                 'postal_code' => $addressData['postal_code'] ?? null,
                 'is_default' => false,
-                'type' => 'other',
+                'type' => 'shipping',
             ]);
             $address->save(); // Save to get real ID
         }
